@@ -3,7 +3,7 @@
  * Author: Matthew Waller | D00218004
  ******************************************************************************/
 
-package Daos;
+package DAOs;
 
 import DTOs.TollEvent;
 import Exceptions.DaoException;

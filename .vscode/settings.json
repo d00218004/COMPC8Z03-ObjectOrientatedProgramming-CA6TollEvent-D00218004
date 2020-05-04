@@ -1,0 +1,6 @@
+{
+    "java.project.referencedLibraries": [
+        "lib/**/*.jar",
+        "c:\\Users\\Matthew Waller\\OneDrive - Dundalk Institute of Technology\\SD1B Year 2\\Semester 2\\COMPC8Z03 Object Oriented Programming\\javax.json-1.0.4.jar"
+    ]
+}
