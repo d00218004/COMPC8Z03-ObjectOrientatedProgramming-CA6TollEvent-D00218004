@@ -1,31 +1,7 @@
-/**
- * SERVER                                                   February 2019 DL 08/03/19
- *
- * Server accepts client connections, creates a ClientHandler to handle the
- * Client communication, creates a socket and passes the socket to the handler,
- * runs the handler in a separate Thread.
- *
- *
- * The handler reads requests from clients, and sends replies to clients, all in
- * accordance with the rules of the protocol. as specified in
- * "ClientServerBasic" sample program
- *
- * The following PROTOCOL is implemented:
- *
- * If ( the Server receives the request "Time", from a Client ) then : the
- * server will send back the current time
- *
- * If ( the Server receives the request "Echo message", from a Client ) then :
- * the server will send back the message
- *
- * If ( the Server receives the request it does not recognize ) then : the
- * server will send back the message "Sorry, I don't understand"
- *
- * This is an example of a simple protocol, where the server's response is based
- * on the client's request.
- *
- *
- */
+/** *****************************************************************************
+ * Object-Orientated Programming CA6 | Client-Server Toll System | CA Value: 35%
+ * Author: Matthew Waller | D00218004
+ ***************************************************************************** */
 package BusinessObjects;
 
 import java.io.BufferedReader;
@@ -37,9 +13,9 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Scanner;
 import java.util.Set;
-
 import javax.json.Json;
 import javax.json.JsonBuilderFactory;
 import javax.json.JsonObject;
@@ -121,6 +97,7 @@ public class Server
         public void run()
         {
             String message;
+            String fileName = "vehicles.csv";
             try
             {
                 while ((message = socketReader.readLine()) != null)
@@ -130,8 +107,6 @@ public class Server
                     JsonReader reader = Json.createReader(socketReader);
                     JsonObject object = reader.readObject();
                     String value = object.getString("PacketType");
-
-                    String fileName = "vehicles.csv";
 
                     if (value.equalsIgnoreCase("Heartbeat"))
                     {
@@ -144,41 +119,30 @@ public class Server
 
                         String response = jsonRootObject.toString(); // JSON Request [String Format]
                         socketWriter.println(response); // Write this to the socket, Send back over to the Client
-                        System.out.println("Server Response: " + response);
                     } else if (value.equalsIgnoreCase("GetRegisteredVehicles"))
                     {
-                        System.out.println("Reading from " + fileName);
-                        Set set = new HashSet<String>();
+                        loadRegistrationDatabase(fileName);
+                        Set<String> set;
+                        set = loadRegistrationDatabase("vehicles.csv");
+                        Iterator iter = set.iterator(); // Set set iterator for looping through reg
 
-                        try
+                        String jsonString = "{" // root object
+                                + "\"vehicles\":[";   // set up the array (list)
+                        for (int i = 0; i < set.size(); i++)
                         {
-                            Scanner sc = new Scanner(new File(fileName));
-
-                            while (sc.hasNext())
-                            {
-                                String reg = sc.next();
-                                set.add(reg);
-                            }
-
-                            String jsonString = "{" // root object
-                                    + "\"vehicles\":";   // set up the array (list)
+                            Object element = iter.next();
                             jsonString
-                                    += "\"" + set + "\",";
-                            jsonString
-                                    += "}";  // close the array and close the object 
-
-                            System.out.println(jsonString);
-                            sc.close();
-                        } catch (IOException e)
-                        {
-                            System.out.println("\n+-----------------------------------------------------+");
-                            System.out.println("|              Database Load Unsuccessful             |");
-                            System.out.println("|            Check File Name / Path / Type            |");
-                            System.out.println("+-----------------------------------------------------+");
+                                    += //                        + "\"id\":" + set + "\",";
+                                    "\"" + element + "\",";
                         }
+                        jsonString += "]}";  // close the array and close the object 
+                        
+                        socketWriter.println(jsonString);
 
                     } else
+                    {
                         socketWriter.println("I'm sorry I don't understand :(");
+                    }
 
                 }
 
@@ -194,29 +158,24 @@ public class Server
 
     public static Set loadRegistrationDatabase(String fileName)
     {
+        System.out.println("\n+-----------------------------------------------------+");
+        System.out.println("|     Load Toll Event Registrations from Database     |");
+        System.out.println("+-----------------------------------------------------+");
+
         System.out.println("Reading from " + fileName);
+
         Set set = new HashSet<String>();
 
         try
         {
             Scanner sc = new Scanner(new File(fileName));
-
+            String reg = "";
+            // default delimeter is whitespace and newlines
             while (sc.hasNext())
             {
-                String reg = sc.next();
+                reg = sc.next();
                 set.add(reg);
             }
-
-            String jsonString = "{" // root object
-                    + "\"vehicles\":";   // set up the array (list)
-            jsonString
-                    += "\"" + set + "\",";
-            jsonString
-                    += "}";  // close the array and close the object 
-
-            System.out.println(jsonString);
-            sc.close();
-
         } catch (IOException e)
         {
             System.out.println("\n+-----------------------------------------------------+");
