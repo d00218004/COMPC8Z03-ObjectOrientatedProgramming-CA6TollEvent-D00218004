@@ -127,6 +127,8 @@ public class Server
                         Iterator iter = set.iterator(); // Set set iterator for looping through reg
 
                         String jsonString = "{" // root object
+                                + "\"PacketType\":"
+                                + "\"ReturnRegisteredVehicles\","
                                 + "\"vehicles\":[";   // set up the array (list)
                         for (int i = 0; i < set.size(); i++)
                         {
@@ -136,8 +138,13 @@ public class Server
                                     "\"" + element + "\",";
                         }
                         jsonString += "]}";  // close the array and close the object 
-                        
+
                         socketWriter.println(jsonString);
+
+                    } else if (value.equalsIgnoreCase("Close"))
+                    {
+                        socket.close();
+                        System.out.println("Server: (ClientHandler): Handler for Client " + clientNumber + " is terminating .....");
 
                     } else
                     {

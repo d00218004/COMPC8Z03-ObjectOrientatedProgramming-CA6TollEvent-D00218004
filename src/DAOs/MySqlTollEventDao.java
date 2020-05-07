@@ -105,10 +105,11 @@ public class MySqlTollEventDao extends MySqlDao implements TollEventDaoInterface
             rs = ps.executeQuery();
             while (rs.next()) 
             {
+                String tollBoothID = rs.getString("TOLLBOOTHID");
                 String registration = rs.getString("REGISTRATION");
                 long imageId = rs.getLong("IMAGEID");
                 long timestamp = rs.getLong("TIMESTAMP");
-                TollEvent e = new TollEvent(registration, imageId, timestamp);
+                TollEvent e = new TollEvent(tollBoothID, registration, imageId, timestamp);
                 events.add(e);
             }
         } 
@@ -191,10 +192,11 @@ public class MySqlTollEventDao extends MySqlDao implements TollEventDaoInterface
             rs = ps.executeQuery();
             while (rs.next()) 
             {
+                String tollBoothID = rs.getString("TOLLBOOTHID");                
                 String registration = rs.getString("REGISTRATION");
                 long imageId = rs.getLong("IMAGEID");
                 long timestamp = rs.getLong("TIMESTAMP");
-                TollEvent e = new TollEvent(registration, imageId, timestamp);
+                TollEvent e = new TollEvent(tollBoothID, registration, imageId, timestamp);
                 events.add(e);
             }
         } 
@@ -248,10 +250,11 @@ public class MySqlTollEventDao extends MySqlDao implements TollEventDaoInterface
             rs = ps.executeQuery();
             while (rs.next()) 
             {
+                String tollBoothID = rs.getString("TOLLBOOTHID");
                 String registration = rs.getString("REGISTRATION");
                 long imageId = rs.getLong("IMAGEID");
                 timestamp = rs.getLong("TIMESTAMP");
-                TollEvent e = new TollEvent(registration, imageId, timestamp);
+                TollEvent e = new TollEvent(tollBoothID, registration, imageId, timestamp);
                 events.add(e);
             }
         } 
@@ -305,10 +308,11 @@ public class MySqlTollEventDao extends MySqlDao implements TollEventDaoInterface
             rs = ps.executeQuery();
             while (rs.next()) 
             {
+                String tollBoothID = rs.getString("TOLLBOOTHID");                
                 String registration = rs.getString("REGISTRATION");
                 long imageId = rs.getLong("IMAGEID");
                 long timestamp = rs.getLong("TIMESTAMP");
-                TollEvent e = new TollEvent(registration, imageId, timestamp);
+                TollEvent e = new TollEvent(tollBoothID, registration, imageId, timestamp);
                 events.add(e);
             }
         } 
@@ -361,10 +365,11 @@ public class MySqlTollEventDao extends MySqlDao implements TollEventDaoInterface
             rs = ps.executeQuery();
             while (rs.next()) 
             {
+                String tollBoothID = rs.getString("TOLLBOOTHID");                                
                 String registration = rs.getString("REGISTRATION");
                 long imageId = rs.getLong("IMAGEID");
                 long timestamp = rs.getLong("TIMESTAMP");
-                TollEvent e = new TollEvent(registration, imageId, timestamp);
+                TollEvent e = new TollEvent(tollBoothID, registration, imageId, timestamp);
                 events.add(e);
 
             }

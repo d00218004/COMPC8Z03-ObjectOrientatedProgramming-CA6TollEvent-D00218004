@@ -6,18 +6,29 @@
 package DTOs;
 
 public class TollEvent {
-
+    private String tollBoothID;
     private String registration;
     private long imageId;
     private long timestamp;
 
-    public TollEvent(String registration, long imageId, long timestamp)
+    public TollEvent(String tollBoothID, String registration, long imageId, long timestamp)
     {
+        this.tollBoothID = tollBoothID;
         this.registration = registration;
         this.imageId = imageId;
         this.timestamp = timestamp;
     }
 
+    public String getTollBoothID()
+    {
+        return tollBoothID;
+    }
+
+    public void tollBoothID(String tollBoothID)
+    {
+        this.tollBoothID = tollBoothID;
+    }
+    
     public String getRegistration()
     {
         return registration;
@@ -51,8 +62,6 @@ public class TollEvent {
     @Override
     public String toString()
     {
-        return "TollEvent{" + "registration=" + registration + ", imageId=" + imageId + ", timestamp=" + timestamp + '}';
+        return "TollEvent{" + "tollBoothID=" + tollBoothID + "registration=" + registration + ", imageId=" + imageId + ", timestamp=" + timestamp + '}';
     }
-
-
 }
