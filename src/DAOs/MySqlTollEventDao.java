@@ -1,7 +1,7 @@
-/*******************************************************************************
- * Object-Orientated Programming CA5 [Stage 1] | Toll System | CA Value: 10%
+/** *****************************************************************************
+ * Object-Orientated Programming CA6 | Client-Server Toll System | CA Value: 35%
  * Author: Matthew Waller | D00218004
- ******************************************************************************/
+ ***************************************************************************** */
 package DAOs;
 
 import DTOs.TollEvent;
@@ -360,6 +360,64 @@ public class MySqlTollEventDao extends MySqlDao implements TollEventDaoInterface
             con = this.getConnection();
 
             String query = "SELECT *  FROM (SELECT * FROM EVENTS ORDER BY REGISTRATION ASC) AS TOLL_DB GROUP BY REGISTRATION";
+            ps = con.prepareStatement(query);
+            
+            //Using a PreparedStatement to execute SQL...
+            rs = ps.executeQuery();
+            while (rs.next()) 
+            {
+                String tollBoothID = rs.getString("TOLLBOOTHID");                                
+                String registration = rs.getString("REGISTRATION");
+                long imageId = rs.getLong("IMAGEID");
+                long timestamp = rs.getLong("TIMESTAMP");
+                TollEvent e = new TollEvent(tollBoothID, registration, imageId, timestamp);
+                events.add(e);
+
+            }
+        } 
+        catch (SQLException e) 
+        {
+            throw new DaoException("finaAllTollEventsThatPassedThroughToll() " + e.getMessage());
+        } 
+        finally 
+        {
+            try 
+            {
+                if (rs != null) 
+                {
+                    rs.close();
+                }
+                if (ps != null) 
+                {
+                    ps.close();
+                }
+                if (con != null) 
+                {
+                    freeConnection(con);
+                }
+            } 
+            catch (SQLException e) 
+            {
+                throw new DaoException("finaAllTollEventsThatPassedThroughToll() " + e.getMessage());
+            }
+        }
+        return events;     // may be empty
+    }
+    
+    @Override
+    public List<TollEvent> ProcessTollEventBillingByMonth() throws DaoException 
+    {
+    	Connection con = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        List<TollEvent> events = new ArrayList<>();
+        
+        try 
+        {
+            //Get connection object using the methods in the super class (MySqlDao.java)...
+            con = this.getConnection();
+
+            String query = "SELECT CUSTOMER_NAME, SUM(COST) FROM TOLL_EVENT NATURAL JOIN CUSTOMER_VEHICLE NATURAL JOIN CUSTOMER NATURAL JOIN VEHICLE NATURAL JOIN VEHICLE_TYPE_COST WHERE CUSTOMER_NAME = ? AND TIMESTAMP BETWEEN SUBDATE(CURDATE(), INTERVAL 1 MONTH) AND NOW();";
             ps = con.prepareStatement(query);
             
             //Using a PreparedStatement to execute SQL...

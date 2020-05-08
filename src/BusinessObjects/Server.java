@@ -26,23 +26,6 @@ import javax.json.JsonBuilderFactory;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 
-import DTOs.TollEvent;
-import DAOs.MySqlTollEventDao;
-import DAOs.TollEventDaoInterface;
-import Exceptions.DaoException;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 public class Server
 {
 
@@ -222,6 +205,33 @@ public class Server
                         // Prepare and send Response to the Server
                         JsonObject jsonRootObject = Json.createObjectBuilder()
                                 .add("PacketType", "Registered Invalid TollEvent")
+                                .build();
+
+                        String response = jsonRootObject.toString(); // JSON Request [String Format]
+                        socketWriter.println(response); // Write this to the socket, Send back over to the Client
+                    } else if (value.equalsIgnoreCase("Process Toll Events Billing"))
+                    {
+//                        TollEventDaoInterface ITollEventDao = new MySqlTollEventDao();
+//                        try
+//                        {
+//                            List<TollEvent> events = ITollEventDao.ProcessTollEventBillingByMonth();
+//
+//                            if (events.isEmpty())
+//                            {
+//                                socketWriter.println("There are no Toll Events");
+//                            }
+//
+//                            for (TollEvent event : events)
+//                            {
+//                                System.out.println(event.toString());
+//                                socketWriter.println(events.toString());
+//                            }
+//                        } catch (DaoException e)
+//                        {
+//                            e.printStackTrace();
+//                        }
+                        JsonObject jsonRootObject = Json.createObjectBuilder()
+                                .add("PacketType", "Billing Processed Successfully")
                                 .build();
 
                         String response = jsonRootObject.toString(); // JSON Request [String Format]

@@ -1,8 +1,7 @@
-/*******************************************************************************
- * Object-Orientated Programming CA5 [Stage 1] | Toll System | CA Value: 10%
+/** *****************************************************************************
+ * Object-Orientated Programming CA6 | Client-Server Toll System | CA Value: 35%
  * Author: Matthew Waller | D00218004
- * Starter Code implemented via DataAccessLayer
- ******************************************************************************/
+ ***************************************************************************** */
 
 package Exceptions;
 

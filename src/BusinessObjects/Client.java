@@ -12,6 +12,9 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -19,19 +22,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
-
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.net.Socket;
-import static java.time.Clock.system;
-import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 import javax.json.Json;
 import javax.json.JsonBuilderFactory;
 import javax.json.JsonObject;
-import javax.json.JsonReader;
 
 public class Client
 {
@@ -103,6 +97,9 @@ public class Client
                             System.out.println("|\tTest Client / Server Connection\t\t\t\t\t\t|");
                             System.out.println("+-------------------------------------------------------------------------------+");
                             heartbeat();
+                            socketWriter.close();
+                            socketReader.close();
+                            socket.close();
                             pressAnyKeyToContinue();
                             break;
                         case 2:
@@ -110,33 +107,31 @@ public class Client
                              System.out.println("|\tLoad Vehicle Registration from File\t\t\t\t\t|");
                              System.out.println("+-------------------------------------------------------------------------------+");
                             getRegisteredVehicles();
+                            socketWriter.close();
+                            socketReader.close();
+                            socket.close();
                             pressAnyKeyToContinue();
                             break;
                         case 3:
                             loadTollEventsDatabase(fileName1);
+                            socketWriter.close();
+                            socketReader.close();
+                            socket.close();
                             pressAnyKeyToContinue();
                             break;
                         case 4:
                             processTollEvents(fileName1);
+                            socketWriter.close();
+                            socketReader.close();
+                            socket.close();
                             pressAnyKeyToContinue();
                             break;
                         case 5:
-                            //processValidTollEvents();
-                            break;
-                        case 6:
-                            //getAllTollEventsByRegistration(reg);
-                            break;
-                        case 7:
-                            //getAllTollEventsSinceSpecifiedDateTime(timestamp);
-                            break;
-                        case 8:
-                            //getAllTollEventsSinceStartDateTimeToDateTime(timestampStart, timestampFinish);
-                            break;
-                        case 9:
-                            //getAllTollEventsRegistrations();
-                            break;
-                        case 10:
-                            closeClientConnection();
+                            processTollEventsBilling();
+                            socketWriter.close();
+                            socketReader.close();
+                            socket.close();
+                            pressAnyKeyToContinue();
                             break;
                     }
                 } catch (Exception e)
@@ -165,12 +160,7 @@ public class Client
                 + "| \t2  - Load Vehicle Registrations from the File\t\t\t\t|\n"
                 + "| \t3  - Load Toll Events from the File\t\t\t\t\t|\n"
                 + "| \t4  - Process Toll Events\t\t\t\t\t\t|\n"
-                + "| \t5  - Get All Toll Event Details\t\t\t\t\t\t|\n"
-                + "| \t6  - Get All Toll Event Details by Registration\t\t\t\t|\n"
-                + "| \t7  - Get All Toll Event Details Since a Specified Date or Time\t\t|\n"
-                + "| \t8  - Get All Toll Event Details Between a Specified Date or Time\t|\n"
-                + "| \t9  - Get All Registrations that passed through the Toll\t\t\t|\n"
-                + "| \t10 - Close Client Connection\t\t\t\t\t\t|"
+                + "| \t5  - Get All Toll Event Details by Registration\t\t\t\t|\n"
         );
         System.out.println("+-------------------------------------------------------------------------------+");
     }
@@ -260,7 +250,7 @@ public class Client
         socket.close();
     }
 
-    public static void loadTollEventsDatabase(String fileName1) throws FileNotFoundException, InterruptedException
+    public static void loadTollEventsDatabase(String fileName1) throws FileNotFoundException
     {
         System.out.println("Load Parser Method: ");
         try
@@ -274,10 +264,9 @@ public class Client
         }
     }
 
-    public static Set loadParser(String fileName) throws FileNotFoundException, InterruptedException
+    public static Set loadParser(String fileName) throws FileNotFoundException
     {
         System.out.println("Reading from " + fileName);
-        TimeUnit.SECONDS.sleep(1);
 
         Set tollEventsSet = new HashSet<>();
         try
@@ -428,6 +417,32 @@ public class Client
         }
 
         return set; // of valid registrations
+    }
+    
+    public static void processTollEventsBilling() throws IOException
+    {
+        Socket socket = new Socket("localhost", 8080);
+        OutputStream os = socket.getOutputStream();
+        PrintWriter socketWriter = new PrintWriter(os, true);
+        String command = "Process Toll Events Billing";
+        socketWriter.println(command);  // Write command to the socket
+        Scanner socketReader = new Scanner(socket.getInputStream());
+
+        JsonBuilderFactory factory = Json.createBuilderFactory(null);
+
+        JsonObject jsonRootObject
+                = Json.createObjectBuilder()
+                        .add("PacketType", "Process Toll Events Billing")
+                        .build();
+
+        String request = jsonRootObject.toString(); // JSON Request [String Format]
+        socketWriter.println(request);  // write command to socket
+
+        System.out.println("Client Request: " + request);
+
+        String response = socketReader.nextLine();// wait for, and retrieve the echo ( or other message)
+        System.out.println("Client: Response from server: \"" + response + "\"");
+        socket.close();
     }
 
     public static void closeClientConnection() throws IOException
