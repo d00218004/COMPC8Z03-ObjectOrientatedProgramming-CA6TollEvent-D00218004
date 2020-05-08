@@ -62,6 +62,6 @@ public class TollEvent {
     @Override
     public String toString()
     {
-        return "TollEvent{" + "tollBoothID=" + tollBoothID + "registration=" + registration + ", imageId=" + imageId + ", timestamp=" + timestamp + '}';
+        return "TollEvent{" + "tollBoothID=" + tollBoothID + ", registration=" + registration + ", imageId=" + imageId + ", timestamp=" + timestamp + '}';
     }
 }

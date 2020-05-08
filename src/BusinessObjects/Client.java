@@ -27,6 +27,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import static java.time.Clock.system;
 import java.util.Scanner;
+import java.util.concurrent.TimeUnit;
 import javax.json.Json;
 import javax.json.JsonBuilderFactory;
 import javax.json.JsonObject;
@@ -52,7 +53,7 @@ public class Client
 
         try
         {
-            
+
             Socket socket = new Socket("localhost", 8080);
             System.out.println("Client: Port# of this client : " + socket.getLocalPort());
             System.out.println("Client: Port# of Server :" + socket.getPort());
@@ -92,24 +93,32 @@ public class Client
                         case 0:
                             System.out.println("Shutting down");
                             closeClientConnection();
-                            sc.close();
+                            socketWriter.close();
+                            socketReader.close();
+                            socket.close();
                             quit = true;
                             break;
                         case 1:
+                            System.out.println("\n+-------------------------------------------------------------------------------+");
+                            System.out.println("|\tTest Client / Server Connection\t\t\t\t\t\t|");
+                            System.out.println("+-------------------------------------------------------------------------------+");
                             heartbeat();
                             pressAnyKeyToContinue();
                             break;
                         case 2:
-                            loadRegistrationDatabase();
+                             System.out.println("\n+-------------------------------------------------------------------------------+");
+                             System.out.println("|\tLoad Vehicle Registration from File\t\t\t\t\t|");
+                             System.out.println("+-------------------------------------------------------------------------------+");
+                            getRegisteredVehicles();
                             pressAnyKeyToContinue();
                             break;
                         case 3:
                             loadTollEventsDatabase(fileName1);
-                            pressAnyKeyToContinue();                            
+                            pressAnyKeyToContinue();
                             break;
                         case 4:
                             processTollEvents(fileName1);
-                            pressAnyKeyToContinue();                            
+                            pressAnyKeyToContinue();
                             break;
                         case 5:
                             //processValidTollEvents();
@@ -133,6 +142,7 @@ public class Client
                 } catch (Exception e)
                 {
                     System.out.println("Invalid Option");
+                    socket.close();
                 }
             }
         } catch (IOException e)
@@ -179,9 +189,6 @@ public class Client
         socketWriter.println(command);  // Write command to the socket
         Scanner socketReader = new Scanner(socket.getInputStream());
 
-        System.out.println("\n+-------------------------------------------------------------------------------+");
-        System.out.println("|\tTest Client / Server Connection\t\t\t\t\t\t|");
-        System.out.println("+-------------------------------------------------------------------------------+");
         JsonBuilderFactory factory = Json.createBuilderFactory(null);
 
         JsonObject jsonRootObject
@@ -189,10 +196,10 @@ public class Client
                         .add("PacketType", "Heartbeat")
                         .build();
 
-        String value = jsonRootObject.toString(); // JSON Request [String Format]
-        socketWriter.println(value);  // write command to socket
+        String request = jsonRootObject.toString(); // JSON Request [String Format]
+        socketWriter.println(request);  // write command to socket
 
-        System.out.println("Client Request: " + value);
+        System.out.println("Client Request: " + request);
 
 //        BufferedReader socketReader;
 //        PrintWriter socketWriter;
@@ -208,25 +215,20 @@ public class Client
 //        this.clientNumber = clientNumber; // ID number that we are assigning to this client
 //
 //        this.socket = clientSocket; // store socket ref for closing
-       
         String response = socketReader.nextLine();// wait for, and retrieve the echo ( or other message)
         System.out.println("Client: Response from server: \"" + response + "\"");
         socket.close();
     }
 
-    public static void loadRegistrationDatabase() throws IOException
+    public static void getRegisteredVehicles() throws IOException
     {
         Socket socket = new Socket("localhost", 8080);
         OutputStream os = socket.getOutputStream();
         PrintWriter socketWriter = new PrintWriter(os, true);
-        
+
         String command = "GetRegisteredVehicles";
         socketWriter.println(command);  // Write command to the socket
         Scanner socketReader = new Scanner(socket.getInputStream());
-
-        System.out.println("\n+-------------------------------------------------------------------------------+");
-        System.out.println("|\tLoad Vehicle Registration from File\t\t\t\t\t|");
-        System.out.println("+-------------------------------------------------------------------------------+");
 
         JsonObject jsonRootObject
                 = Json.createObjectBuilder()
@@ -238,8 +240,8 @@ public class Client
         System.out.println("Client Request: " + value);
 
         //--------------------------------------------------------------------------------------------------------------------------
-        
         String response = socketReader.nextLine();// wait for, and retrieve the echo ( or other message)
+
 //        InputStreamReader in = new InputStreamReader(System.in);
 //        BufferedReader read = new BufferedReader(in);
 //        String message;
@@ -257,8 +259,8 @@ public class Client
         System.out.println("Client: Response from server: " + response);
         socket.close();
     }
-    
-    public static void loadTollEventsDatabase(String fileName1)
+
+    public static void loadTollEventsDatabase(String fileName1) throws FileNotFoundException, InterruptedException
     {
         System.out.println("Load Parser Method: ");
         try
@@ -271,10 +273,12 @@ public class Client
             System.out.println("File Not Found!");
         }
     }
-    
-    public static Set loadParser(String fileName) throws FileNotFoundException
+
+    public static Set loadParser(String fileName) throws FileNotFoundException, InterruptedException
     {
         System.out.println("Reading from " + fileName);
+        TimeUnit.SECONDS.sleep(1);
+
         Set tollEventsSet = new HashSet<>();
         try
         {
@@ -295,12 +299,14 @@ public class Client
         }
         return tollEventsSet;
     }
-    
-    public static void processTollEvents(String fileName1)
+
+    public static void processTollEvents(String fileName1) throws IOException
     {
-        System.out.println("\n+-----------------------------------------------------+");
-        System.out.println("|                Process Toll Events                  |");
-        System.out.println("+-----------------------------------------------------+");
+        Socket socket = new Socket("localhost", 8080);
+        OutputStream os = socket.getOutputStream();
+        PrintWriter socketWriter = new PrintWriter(os, true);
+
+        Scanner socketReader = new Scanner(socket.getInputStream());
 
         // Declare Set of Valid Vehicle Registrations
         Set<String> set;
@@ -310,71 +316,93 @@ public class Client
 
         // Load Vehicle Database from CSV into Set
         set = loadRegistrationDatabase("vehicles.csv");
-
+        
+        
+        System.out.println("\n+-------------------------------------------------------------------------------+");
+        System.out.println("|\tProcess Toll Events\t\t\t\t\t\t\t|");
+        System.out.println("+-------------------------------------------------------------------------------+");
+        
         // Valid Registrations 'look-up Table' (Check Object Instance against Valid Registrations)
         HashMap<String, ArrayList<TollEvent>> map = new HashMap<>();
 
         //System.out.println("TollEvents: " + set.toString());
         // Creating a TollEvent Object Instance
-        //TollEvent event = new TollEvent("TB_M50", "205LH309", 222222, 1562537493);
-        TollEvent event = new TollEvent("TB_M50", "205LH309", 222222, 1562537493);
-
+        //TollEvent   event = new TollEvent("TB_M50", "205LH309", 222222, 1562537493); // Invalid TollEvent Instance
+        TollEvent   event = new TollEvent("TB_M50", "201LH309", 111111, 1562537493);  // Valid TollEvent Instance
+        System.out.println("Toll Event Instance : "+event+"\n");
         // Check Object Instance against the HashMap
+
         if (set.contains(event.getRegistration()))
         {
-            System.out.println("Registration: " + event.getRegistration() + " is valid ");
+            System.out.println("Registration: " + event.getRegistration() + " is valid\n");
             // then process the TollEvent object i.e. write TollEvent object to a map<String(registration), List of TollEvents (ArrayList)>
 
             // map(KEY, VALUE)
             if (map.get(event.getRegistration()) == null) // The Registration is not in the map
             {
+                String command = "RegisterValidTollEvent";
+                socketWriter.println(command);  // Write command to the socket
                 ArrayList<TollEvent> list = new ArrayList<>();
                 list.add(event);
                 map.put(event.getRegistration(), list);
-                System.out.println("Valid Toll Events: "+list);
+                System.out.println("Valid Toll Events: " + list);
 
                 JsonObject jsonRootObject = Json.createObjectBuilder()
-                                .add("PacketType", "RegisterValidTollEvent")
-                                .add("TollBoothID", event.getTollBoothID())
-                                .add("Vehicle Registration", event.getRegistration())
-                                .add("Vehicle Image ID", event.getImageId())
-                                .add("LocalDateTime", event.getTimestamp())
-                                .build();
-                        String value = jsonRootObject.toString(); // JSON Request [String Format]
-                System.out.println(value);  // write command to socket
+                        .add("PacketType", "RegisterValidTollEvent")
+                        .add("TollBoothID", event.getTollBoothID())
+                        .add("Vehicle Registration", event.getRegistration())
+                        .add("Vehicle Image ID", event.getImageId())
+                        .add("LocalDateTime", event.getTimestamp())
+                        .build();
+                String request = jsonRootObject.toString(); // JSON Request [String Format]
+                socketWriter.println(request);  // write command to socket
+                System.out.println("RegisterValidTollEvent sent to server");
+
+                String response = socketReader.nextLine();// wait for, and retrieve the echo ( or other message)
+                System.out.println("Client: Response from server: \"" + response + "\"");
+                socket.close();
+
             } else // The Registration is already in the map
             {
                 ArrayList<TollEvent> list = map.get(event.getRegistration());
                 list.add(event);  // Adds to the ArrayList in the map
                 System.out.println("Adding event to the ArrayList");
+                socket.close();
             }
 
             //System.out.println("Registration From map: " + map.get(event.getRegistration()));
         } else
         {
-            System.out.println("Registration: " + event.getRegistration() + " is not a valid Registration, Adding to the Invalid Registration List...");
+            String command = "RegisterInvalidTollEvent";
+            socketWriter.println(command);  // Write command to the socket
+            System.out.println("Registration: " + event.getRegistration() + " is not a valid Registration, Adding to the Invalid Registration List...\n");
 
             // Add the Registration to a list of Invalid Registrations
             invalidRegistrationsList.add(event.getRegistration());
             System.out.println("Invalid Toll Events: " + event);
-            
+
             JsonObject jsonRootObject = Json.createObjectBuilder()
-                                .add("PacketType", "RegisterInvalidTollEvent")
-                                .add("TollBoothID", event.getTollBoothID())
-                                .add("Vehicle Registration", event.getRegistration())
-                                .add("Vehicle Image ID", event.getImageId())
-                                .add("LocalDateTime", event.getTimestamp())
-                                .build();
-                        String value = jsonRootObject.toString(); // JSON Request [String Format]
-                System.out.println(value);  // write command to socket
+                    .add("PacketType", "RegisterInvalidTollEvent")
+                    .add("TollBoothID", event.getTollBoothID())
+                    .add("Vehicle Registration", event.getRegistration())
+                    .add("Vehicle Image ID", event.getImageId())
+                    .add("LocalDateTime", event.getTimestamp())
+                    .build();
+            String request = jsonRootObject.toString(); // JSON Request [String Format]
+            socketWriter.println(request);  // write command to socket
+            System.out.println("RegisterInvalidTollEvent sent to server");
+
+            String response = socketReader.nextLine();// wait for, and retrieve the echo ( or other message)
+            System.out.println("Client: Response from server: \"" + response + "\"");
+            socket.close();
         }
     }
-    
+
     public static Set loadRegistrationDatabase(String fileName)
     {
-        System.out.println("\n+-----------------------------------------------------+");
-        System.out.println("|     Load Toll Event Registrations from Database     |");
-        System.out.println("+-----------------------------------------------------+");
+        System.out.println("\n+-------------------------------------------------------------------------------+");
+        System.out.println("|\tLoad Toll Events from File\t\t\t\t\t\t|");
+        System.out.println("+-------------------------------------------------------------------------------+");
 
         System.out.println("Reading from " + fileName);
 
@@ -401,14 +429,21 @@ public class Client
 
         return set; // of valid registrations
     }
-    
+
     public static void closeClientConnection() throws IOException
     {
         Socket socket = new Socket("localhost", 8080);
         OutputStream os = socket.getOutputStream();
         PrintWriter socketWriter = new PrintWriter(os, true);
-        
-        String command = "Close";
-        socketWriter.println(command);  // Write command to the socket
+
+        JsonBuilderFactory factory = Json.createBuilderFactory(null);
+
+        JsonObject jsonRootObject
+                = Json.createObjectBuilder()
+                        .add("PacketType", "Close")
+                        .build();
+
+        String value = jsonRootObject.toString(); // JSON Request [String Format]
+        socketWriter.println(value);  // write command to socket
     }
 }

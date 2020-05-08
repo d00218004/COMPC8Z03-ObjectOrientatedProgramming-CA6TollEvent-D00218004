@@ -143,7 +143,7 @@ public class MySqlTollEventDao extends MySqlDao implements TollEventDaoInterface
     }
     
     @Override
-    public void writeTollEvent(String registration, long imageId, long timestamp) throws DaoException 
+    public void writeTollEvent(String tollBoothID, String registration, long imageId, long timestamp) throws DaoException 
     {
     	Connection con = null;
         PreparedStatement ps = null;
@@ -154,13 +154,14 @@ public class MySqlTollEventDao extends MySqlDao implements TollEventDaoInterface
             //Get connection object using the methods in the super class (MySqlDao.java)...
             con = this.getConnection();
 
-            String query = "INSERT INTO EVENTS VALUES (null, ?, ?, ?)";
+            String query = "INSERT INTO EVENTS VALUES (null, ?, ?, ?, ?)";
             ps = con.prepareStatement(query);
             
             // Do not add userID here - it will be auto-incremented automatically!
-            ps.setString(1, registration);
-            ps.setLong(2, imageId);
-            ps.setLong(3, timestamp);
+            ps.setString(1, tollBoothID);
+            ps.setString(2, registration);
+            ps.setLong(3, imageId);
+            ps.setLong(4, timestamp);
             
             // execute SQL Query
             ps.executeUpdate();

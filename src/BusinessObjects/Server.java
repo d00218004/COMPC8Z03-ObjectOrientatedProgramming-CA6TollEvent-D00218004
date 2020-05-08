@@ -4,6 +4,10 @@
  ***************************************************************************** */
 package BusinessObjects;
 
+import DAOs.MySqlTollEventDao;
+import DAOs.TollEventDaoInterface;
+import DTOs.TollEvent;
+import Exceptions.DaoException;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -12,6 +16,7 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Scanner;
@@ -20,6 +25,23 @@ import javax.json.Json;
 import javax.json.JsonBuilderFactory;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
+
+import DTOs.TollEvent;
+import DAOs.MySqlTollEventDao;
+import DAOs.TollEventDaoInterface;
+import Exceptions.DaoException;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Server
 {
@@ -137,10 +159,73 @@ public class Server
                                     += //                        + "\"id\":" + set + "\",";
                                     "\"" + element + "\",";
                         }
-                        jsonString += "]}";  // close the array and close the object 
+                        jsonString += "]}";  // close the array and close the object
 
                         socketWriter.println(jsonString);
 
+                    } else if (value.equalsIgnoreCase("RegisterValidTollEvent"))
+                    {
+                        // Accept JSON File and Parse to Object
+                        System.out.println(object.toString());
+                        value = object.getString("PacketType");
+                        String tollId = object.getString("TollBoothID");
+                        String vehicleRegistration = object.getString("Vehicle Registration");
+                        long vehicleImageId = object.getInt("Vehicle Image ID");
+                        long timestamp = object.getInt("LocalDateTime");
+                        TollEvent event = new TollEvent(tollId, vehicleRegistration, vehicleImageId, timestamp);
+                        System.out.println(event.toString());
+
+                        /*  #########################################################################
+                            #   I was able to read the JSON String and allocate the data to the     #
+                            #   TollEvent object. However when I used the DAO to write the          #
+                            #   TollEvent Object, a DAO Exception Occured  at the server.start()    #
+                            #   even though I declared the DAOs and the TollEvent Object correctly  #
+                            #########################################################################
+                         */
+                        // Prepare TollEvent DAO, Write to Database
+                        /*
+                        TollEventDaoInterface ITollEventDao = new MySqlTollEventDao();
+
+                        try
+                        {
+                            ITollEventDao.writeTollEvent(tollId, vehicleRegistration, vehicleImageId, timestamp);
+                            System.out.println("Writing to Database Successful");
+                        } catch (DaoException e)
+                        {
+                            e.printStackTrace();
+                        }
+                         */
+                        // Prepare and send Response to the Server
+                        JsonObject jsonRootObject = Json.createObjectBuilder()
+                                .add("PacketType", "Registered Valid Toll Event")
+                                .build();
+
+                        String response = jsonRootObject.toString(); // JSON Request [String Format]
+                        socketWriter.println(response); // Write this to the socket, Send back over to the Client
+
+                    } else if (value.equalsIgnoreCase("RegisterInvalidTollEvent"))
+                    {
+                        // Accept JSON File and Parse to Object
+                        System.out.println(object.toString());
+                        value = object.getString("PacketType");
+                        String tollId = object.getString("TollBoothID");
+                        String vehicleRegistration = object.getString("Vehicle Registration");
+                        long vehicleImageId = object.getInt("Vehicle Image ID");
+                        long timestamp = object.getInt("LocalDateTime");
+
+                        // Assign the data to the TollEvent Object
+                        TollEvent event = new TollEvent(tollId, vehicleRegistration, vehicleImageId, timestamp);
+                        System.out.println(event.toString());
+                        ArrayList<String> invalidRegistrationsList = new ArrayList<>();
+                        invalidRegistrationsList.add(event.getRegistration());
+
+                        // Prepare and send Response to the Server
+                        JsonObject jsonRootObject = Json.createObjectBuilder()
+                                .add("PacketType", "Registered Invalid TollEvent")
+                                .build();
+
+                        String response = jsonRootObject.toString(); // JSON Request [String Format]
+                        socketWriter.println(response); // Write this to the socket, Send back over to the Client
                     } else if (value.equalsIgnoreCase("Close"))
                     {
                         socket.close();
@@ -193,4 +278,5 @@ public class Server
 
         return set; // of valid registrations
     }
+
 }

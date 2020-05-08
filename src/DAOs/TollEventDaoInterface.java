@@ -12,7 +12,7 @@ import java.util.List;
 public interface TollEventDaoInterface
 {
     public List<TollEvent> findAllTollEvents() throws DaoException;
-    public void writeTollEvent(String registration, long imageId, long timestamp) throws DaoException;
+    public void writeTollEvent(String tollBoothID, String registration, long imageId, long timestamp) throws DaoException;
     public List<TollEvent> findAllTollEventsByRegistration(String reg) throws DaoException;
     public List<TollEvent> findAllTollEventsSinceSpecifiedDateTime(long timestamp) throws DaoException;
     public List<TollEvent> findAllTollEventsBetweenSpecifiedDateTime(long timestampStart, long timestampFinish) throws DaoException;
